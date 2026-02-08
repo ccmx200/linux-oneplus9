@@ -15,10 +15,6 @@ on:
           - debian-server
           - ubuntu-desktop
           - ubuntu-server
-      kernel_version:
-        description: '内核版本号 (从 Release 下载对应版本)'
-        required: true
-        default: '6.18'
       desktop_environment:
         description: '桌面环境 (仅适用于Desktop版本)'
         required: false
@@ -45,7 +41,7 @@ jobs:
     env:
       BUILD_TIMESTAMP: ${{ format('{0}', github.run_id) }}-${{ github.run_number }}
       SYSTEM_TYPE: ${{ inputs.system_type }}
-      KERNEL_VERSION: ${{ inputs.kernel_version }}
+      KERNEL_VERSION: "5.16"
       DESKTOP_ENV: ${{ inputs.desktop_environment || 'phosh-full' }}
     
     steps:
@@ -57,7 +53,7 @@ jobs:
       - name: 安装构建工具
         run: |
           sudo apt update
-          sudo apt install -y debootstrap
+          sudo apt install -y debootstrap jq
       
       # 验证参数
       - name: 验证构建参数
@@ -81,34 +77,30 @@ jobs:
           
           echo "正在下载内核包 (版本: ${{ env.KERNEL_VERSION }})..."
           
-          # 下载通用内核包
-          curl -L -o oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/linux-image-oneplus-lemonade.deb \
-            "https://github.com/${{ github.repository }}/releases/download/kernel-v${{ env.KERNEL_VERSION }}/linux-image-oneplus-lemonade.deb" || echo "下载 linux-image-oneplus-lemonade.deb 失败，可能 Release 不存在"
+          # 获取Release中的所有资产
+          RELEASE_ASSETS=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/tags/kernel-v${{ env.KERNEL_VERSION }}" | jq -r '.assets[] | {name: .name, browser_download_url: .browser_download_url}')
           
-          curl -L -o oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/linux-headers-oneplus-lemonade.deb \
-            "https://github.com/${{ github.repository }}/releases/download/kernel-v${{ env.KERNEL_VERSION }}/linux-headers-oneplus-lemonade.deb" || echo "下载 linux-headers-oneplus-lemonade.deb 失败，可能 Release 不存在"
-          
-          curl -L -o oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/firmware-oneplus-lemonade.deb \
-            "https://github.com/${{ github.repository }}/releases/download/kernel-v${{ env.KERNEL_VERSION }}/firmware-oneplus-lemonade.deb" || echo "下载 firmware-oneplus-lemonade.deb 失败，可能 Release 不存在"
+          # 下载所有deb包
+          echo "$RELEASE_ASSETS" | jq -r '. | select(.name | test(".*\.deb$"))' | while read -r ASSET; do
+            NAME=$(echo "$ASSET" | jq -r '.name')
+            URL=$(echo "$ASSET" | jq -r '.browser_download_url')
+            echo "正在下载: $NAME"
+            curl -L -o "oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/$NAME" "$URL"
+          done
           
           # 下载oneplus-lemonade-boot.img
           curl -L -o oneplus-lemonade-boot.img \
             "https://github.com/GengWei1997/kernel-deb/releases/download/v1.0.0/oneplus-lemonade-boot.img" \
             || echo "下载 oneplus-lemonade-boot.img 失败，可能 Release 不存在"
           
-          # Desktop版本需要额外的alsa包
-          if [[ "${{ env.SYSTEM_TYPE }}" == *"desktop"* ]]; then
-            curl -L -o oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/alsa-oneplus-lemonade.deb \
-              "https://github.com/${{ github.repository }}/releases/download/kernel-v${{ env.KERNEL_VERSION }}/alsa-oneplus-lemonade.deb" || echo "下载 alsa-oneplus-lemonade.deb 失败，可能 Release 不存在"
-          fi
-          
           # 检查是否下载成功
           echo "下载的内核包列表:"
           ls -la oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/ || echo "目录为空"
           
-          # 检查必要文件是否存在
-          if [ ! -f "oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/linux-image-oneplus-lemonade.deb" ]; then
-            echo "错误: 必要的内核包未下载成功"
+          # 检查是否有deb包被下载
+          DEB_COUNT=$(ls -la oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/*.deb 2>/dev/null | wc -l)
+          if [ "$DEB_COUNT" -eq 0 ]; then
+            echo "错误: 未下载到任何内核包"
             exit 1
           fi
       

@@ -34,33 +34,11 @@ jobs:
           7zip kmod bash cpio binutils tar git wget dpkg libssl-dev \
           libelf-dev python3 rsync debhelper-compat libdw-dev
       
-      # 设置 ccache 缓存
-      - name: 设置 ccache
-        uses: actions/cache@v3
-        with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-ccache-kernel-${{ env.KERNEL_VERSION }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-kernel-
-      
-      # 安装并配置 ccache
-      - name: 安装配置 ccache
-        run: |
-          sudo apt install -y ccache
-          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=5G" >> $GITHUB_ENV
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
-      
       # 编译内核
       - name: 编译内核
         env:
-          CCACHE_DIR: ${{ env.CCACHE_DIR }}
           PATH: ${{ env.PATH }}
         run: |
-          # 导出 ccache 环境变量
-          export CCACHE_DIR="$HOME/.ccache"
-          export PATH="/usr/lib/ccache:$PATH"
-          
           # 执行内核编译脚本
           sudo sh lemonade-kernel_build.sh
       
@@ -89,7 +67,6 @@ jobs:
           prerelease: false
           files: |
             *.deb
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
