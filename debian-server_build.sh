@@ -1,15 +1,6 @@
 #!/bin/bash
 set -e
 
-# 检查参数
-if [ $# -lt 1 ]; then
-    echo "错误: 缺少必要参数"
-    echo "用法: $0 <内核版本>"
-    exit 1
-fi
-
-KERNEL_VERSION=$1
-
 # 创建工作目录
 mkdir -p rootdir
 
