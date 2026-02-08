@@ -85,7 +85,7 @@ jobs:
             NAME=$(echo "$ASSET" | jq -r '.name')
             URL=$(echo "$ASSET" | jq -r '.browser_download_url')
             echo "正在下载: $NAME"
-            curl -L -o "oneplus-lemonade-debs_${{ env.KERNEL_VERSION }}/$NAME" "$URL"
+            curl -L -o "oneplus-lemonade-debs/$NAME" "$URL"
           done
           
           # 下载oneplus-lemonade-boot.img
