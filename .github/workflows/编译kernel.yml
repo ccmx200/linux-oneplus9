@@ -1,14 +1,9 @@
 # 内核编译工作流 - 在 Ubuntu 24.04 ARM 上运行
 name: 内核编译
 
-# 手动触发，可指定内核版本
+# 手动触发
 on:
   workflow_dispatch:
-    inputs:
-      kernel_version:
-        description: '内核版本号 (如 6.18)'
-        required: true
-        default: '6.18'
 
 # 工作流配置
 jobs:
@@ -24,6 +19,7 @@ jobs:
     # 定义环境变量
     env:
       BUILD_TIMESTAMP: ${{ format('{0}', github.run_id) }}-${{ github.run_number }}
+      KERNEL_VERSION: "5.16"
     
     steps:
       # 检出代码
@@ -43,7 +39,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-ccache-kernel-${{ inputs.kernel_version }}
+          key: ${{ runner.os }}-ccache-kernel-${{ env.KERNEL_VERSION }}
           restore-keys: |
             ${{ runner.os }}-ccache-kernel-
       
@@ -66,7 +62,7 @@ jobs:
           export PATH="/usr/lib/ccache:$PATH"
           
           # 执行内核编译脚本
-          sudo sh lemonade-kernel_build.sh ${{ inputs.kernel_version }}
+          sudo sh lemonade-kernel_build.sh
       
       # 获取当前时间戳
       - name: 获取构建时间
@@ -82,11 +78,11 @@ jobs:
       - name: 创建 Release 并上传产物
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: kernel-v${{ inputs.kernel_version }}
-          name: "oneplus lemonade linux内核 v${{ inputs.kernel_version }}"
+          tag_name: kernel-v${{ env.KERNEL_VERSION }}
+          name: "oneplus lemonade linux内核 v${{ env.KERNEL_VERSION }}"
           body: |
             oneplus lemonade linux内核
-            - 版本: ${{ inputs.kernel_version }}
+            - 版本: ${{ env.KERNEL_VERSION }}
             - 构建时间: ${{ steps.get-timestamp.outputs.timestamp }}
             - 构建 ID: ${{ env.BUILD_TIMESTAMP }}
           draft: false
@@ -101,6 +97,6 @@ jobs:
       - name: 上传内核包作为工作流制品
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-packages-v${{ inputs.kernel_version }}
+          name: kernel-packages-v${{ env.KERNEL_VERSION }}
           path: |
             *.deb
