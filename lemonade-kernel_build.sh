@@ -13,7 +13,7 @@ set -e  # 遇到错误立即退出
 wget -q https://gitlab.com/sm8350-mainline/linux/-/archive/ffb1b0db511df03829fa0c9682f2412c0db7f717.tar.gz 
 tar zxf ffb1b0db511df03829fa0c9682f2412c0db7f717.tar.gz
 cd linux-ffb1b0db511df03829fa0c9682f2412c0db7f717/
-
+cp ../.config-sm8350 .config
 make -j$(nproc) ARCH=arm64 sm8350.config
 make -j$(nproc) ARCH=arm64  
 make -j$(nproc) ARCH=arm64 bindeb-pkg
