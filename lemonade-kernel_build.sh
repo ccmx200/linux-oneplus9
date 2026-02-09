@@ -11,7 +11,7 @@ set -e  # 遇到错误立即退出
 
 # new version kernel 6.7
 wget -q https://gitlab.com/sm8350-mainline/linux/-/archive/ffb1b0db511df03829fa0c9682f2412c0db7f717.tar.gz 
-tar zxvf ffb1b0db511df03829fa0c9682f2412c0db7f717.tar.gz
+tar zxf ffb1b0db511df03829fa0c9682f2412c0db7f717.tar.gz
 cd linux-ffb1b0db511df03829fa0c9682f2412c0db7f717/
 
 make -j$(nproc) ARCH=arm64 sm8350.config
