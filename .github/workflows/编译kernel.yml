@@ -19,7 +19,7 @@ jobs:
     # 定义环境变量
     env:
       BUILD_TIMESTAMP: ${{ format('{0}', github.run_id) }}-${{ github.run_number }}
-      KERNEL_VERSION: "5.16"
+      KERNEL_VERSION: "6.7"
     
     steps:
       # 检出代码
