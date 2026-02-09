@@ -36,8 +36,6 @@ jobs:
       
       # 编译内核
       - name: 编译内核
-        env:
-          PATH: ${{ env.PATH }}
         run: |
           # 执行内核编译脚本
           bash lemonade-kernel_build.sh
