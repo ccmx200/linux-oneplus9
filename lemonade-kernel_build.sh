@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e  # 遇到错误立即退出
+
 # old version kernel 5.16
 # git clone https://github.com/ccmx200/linux.git -b op9-next-modem
 # cd linux

@@ -40,7 +40,7 @@ jobs:
           PATH: ${{ env.PATH }}
         run: |
           # 执行内核编译脚本
-          sudo sh lemonade-kernel_build.sh
+          bash lemonade-kernel_build.sh
       
       # 获取当前时间戳
       - name: 获取构建时间
